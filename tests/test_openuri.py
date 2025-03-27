@@ -47,7 +47,6 @@ Keywords=web;browser;internet;
 """
 
 
-
 mimeinfo_cache = b"""[MIME Cache]
 application/vnd.mozilla.xul+xml=furrfix.desktop;furrfix2.desktop;
 application/xhtml+xml=furrfix.desktop;furrfix2.desktop;
@@ -410,7 +409,6 @@ class TestOpenURI:
         # Check the impl portal was called with the right args
         mock_intf = xdp.get_mock_iface(dbus_con)
         method_calls = mock_intf.GetMethodCalls("ChooseApplication")
-        assert 1==2
         assert len(method_calls) > 0
         _, args = method_calls[-1]
         assert args[1] == app_id
@@ -555,7 +553,6 @@ class TestOpenURI:
         # Check the impl portal was called with the right args
         mock_intf = xdp.get_mock_iface(dbus_con)
         method_calls = mock_intf.GetMethodCalls("ChooseApplication")
-        assert 1==2
         assert len(method_calls) > 0
         _, args = method_calls[-1]
         assert args[1] == app_id
