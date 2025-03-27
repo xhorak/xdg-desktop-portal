@@ -31,17 +31,33 @@ StartupNotify=true
 Categories=Network;WebBrowser;
 Keywords=web;browser;internet;
 """
+furrfix_desktop2 = b"""[Desktop Entry]
+Version=1.0
+Name=Furrfix2
+GenericName=Not a Web Browser 2
+Comment=Don't Browse the Web
+Exec=true %u
+Icon=furrfix2
+Terminal=false
+Type=Application
+MimeType=text/plain;text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/xdg-desktop-portal-test;
+StartupNotify=true
+Categories=Network;WebBrowser;
+Keywords=web;browser;internet;
+"""
+
+
 
 mimeinfo_cache = b"""[MIME Cache]
-application/vnd.mozilla.xul+xml=furrfix.desktop;
-application/xhtml+xml=furrfix.desktop;
-text/plain=furrfix.desktop;
-text/html=furrfix.desktop;
-text/mml=furrfix.desktop;
-text/xml=furrfix.desktop;
-x-scheme-handler/http=furrfix.desktop;
-x-scheme-handler/https=furrfix.desktop;
-x-scheme-handler/xdg-desktop-portal-test=furrfix.desktop;
+application/vnd.mozilla.xul+xml=furrfix.desktop;furrfix2.desktop;
+application/xhtml+xml=furrfix.desktop;furrfix2.desktop;
+text/plain=furrfix.desktop;furrfix2.desktop;
+text/html=furrfix.desktop;furrfix2.desktop;
+text/mml=furrfix.desktop;furrfix2.desktop;
+text/xml=furrfix.desktop;furrfix2.desktop;
+x-scheme-handler/http=furrfix.desktop;furrfix2.desktop;
+x-scheme-handler/https=furrfix.desktop;furrfix2.desktop;
+x-scheme-handler/xdg-desktop-portal-test=furrfix.desktop;furrfix2.desktop;
 """
 
 
@@ -50,6 +66,7 @@ def xdg_data_home_files():
     return {
         "applications/defaults.list": defaults_list,
         "applications/furrfix.desktop": furrfix_desktop,
+        "applications/furrfix2.desktop": furrfix_desktop2,
         "applications/mimeinfo.cache": mimeinfo_cache,
     }
 
@@ -393,6 +410,7 @@ class TestOpenURI:
         # Check the impl portal was called with the right args
         mock_intf = xdp.get_mock_iface(dbus_con)
         method_calls = mock_intf.GetMethodCalls("ChooseApplication")
+        assert 1==2
         assert len(method_calls) > 0
         _, args = method_calls[-1]
         assert args[1] == app_id
@@ -537,6 +555,7 @@ class TestOpenURI:
         # Check the impl portal was called with the right args
         mock_intf = xdp.get_mock_iface(dbus_con)
         method_calls = mock_intf.GetMethodCalls("ChooseApplication")
+        assert 1==2
         assert len(method_calls) > 0
         _, args = method_calls[-1]
         assert args[1] == app_id
