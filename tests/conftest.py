@@ -463,7 +463,7 @@ def xdg_desktop_portal(
     env = xdp_env.copy()
     _maybe_add_asan_preload(xdg_desktop_portal_path, env)
 
-    xdg_desktop_portal = subprocess.Popen([xdg_desktop_portal_path], env=env)
+    xdg_desktop_portal = subprocess.Popen([xdg_desktop_portal_path, "-v"], env=env)
 
     while not dbus_con.name_has_owner("org.freedesktop.portal.Desktop"):
         returncode = xdg_desktop_portal.poll()
@@ -493,7 +493,7 @@ def xdg_permission_store(
     env = xdp_env.copy()
     _maybe_add_asan_preload(xdg_permission_store_path, env)
 
-    permission_store = subprocess.Popen([xdg_permission_store_path], env=env)
+    permission_store = subprocess.Popen([xdg_permission_store_path, "-v"], env=env)
 
     while not dbus_con.name_has_owner("org.freedesktop.impl.portal.PermissionStore"):
         returncode = permission_store.poll()
@@ -527,7 +527,7 @@ def xdg_document_portal(
     env = xdp_env.copy()
     env.pop("LD_PRELOAD", None)
 
-    document_portal = subprocess.Popen([xdg_document_portal_path], env=env)
+    document_portal = subprocess.Popen([xdg_document_portal_path, "-v"], env=env)
 
     while not dbus_con.name_has_owner("org.freedesktop.portal.Documents"):
         returncode = document_portal.poll()

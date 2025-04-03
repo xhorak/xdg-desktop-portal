@@ -10,6 +10,7 @@ import os
 import tempfile
 from pathlib import Path
 from typing import Any
+import time
 
 
 defaults_list = b"""[Default Applications]
@@ -61,6 +62,27 @@ def required_templates():
         "lockdown": {},
     }
 
+def path_from_null_term_bytes(bytes):
+    path_bytes, rest = bytes.split(b"\x00")
+    assert rest == b""
+    return Path(os.fsdecode(path_bytes))
+
+
+def get_mountpoint(documents_intf):
+    mountpoint = documents_intf.GetMountPoint(byte_arrays=True)
+    mountpoint = path_from_null_term_bytes(mountpoint)
+    assert mountpoint.exists()
+    return mountpoint
+
+
+def export_file(documents_intf, file_path, unique=False):
+    assert file_path.exists()
+
+    with open(file_path.absolute().as_posix(), "r") as file:
+        doc_id = documents_intf.Add(file.fileno(), not unique, False)
+        assert doc_id
+
+    return doc_id
 
 class TestOpenURI:
     def set_permissions(self, dbus_con, type, permissions):
@@ -350,3 +372,58 @@ class TestOpenURI:
             excinfo.value.get_dbus_name()
             == "org.freedesktop.portal.Error.InvalidArgument"
         )
+    def test_openfile_opens_host_path(
+        self, portals, xdg_document_portal, dbus_con, app_id):
+        openuri_intf = xdp.get_portal_iface(dbus_con, "OpenURI")
+        documents_intf = xdp.get_document_portal_iface(dbus_con)
+
+        stored_fd, file_name = tempfile.mkstemp(
+            prefix="openuri_mock_file_", suffix=".html", dir=Path.home()
+        )
+        os.write(stored_fd, b"openuri_mock_file_content")
+        os.close(stored_fd)
+
+        file_path = Path(file_name)
+        doc_id = export_file(documents_intf, file_path)
+        mountpoint = get_mountpoint(documents_intf)
+        doc_path = mountpoint / doc_id / Path(file_name).parts[-1]
+        documents_intf.GrantPermissions(doc_id, "org.example.Test", ["read"])
+        print("Opening file")
+        # Call OpenFile by using fd
+        with open(doc_path) as f:
+            time.sleep(2)
+            print("Getting FD")
+            fd = f.fileno()
+            print(fd)
+            assert fd
+            activation_token = "token"
+            request = xdp.Request(dbus_con, openuri_intf)
+            options = {
+                "writable": False,
+                "activation_token": activation_token,
+            }
+            print("request created")
+            response = request.call(
+                "OpenFile",
+                parent_window="",
+                fd=fd,
+                options=options,
+            )
+            print("post openfile")
+            assert response
+            assert response.response == 0
+
+        # Check the impl portal was called with the right args
+        mock_intf = xdp.get_mock_iface(dbus_con)
+        method_calls = mock_intf.GetMethodCalls("ChooseApplication")
+        assert len(method_calls) > 0
+        _, args = method_calls[-1]
+        assert args[1] == app_id
+        assert args[2] == ""  # parent window
+        assert "furrfix" in args[3]
+
+        assert args[4]["activation_token"] == activation_token
+
+        path = args[4]["uri"]
+        #assert path == "file://" + file_name
+        #assert doc_path != file_name
